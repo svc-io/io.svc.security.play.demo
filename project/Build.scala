@@ -13,24 +13,21 @@ object ApplicationBuild extends Build {
     )
 
   val repositories =
-    //Seq("local nexus public" at "http://localhost:8081/nexus/content/groups/public")
-    Seq("Sonatype OSS Releases" at "http://oss.sonatype.org/content/repositories/releases/")
+    Seq("Sonatype OSS Releases" at "http://oss.sonatype.org/content/repositories/releases/",
+        "Sonatype OSS Snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/")
 
   val main = PlayProject(appName, appVersion, appDependencies, mainLang = SCALA).settings(
 
     resolvers := repositories,
 
-    credentials += Credentials(Path.userHome / ".m2" / ".credentials"),
+    credentials += Credentials(Path.userHome / ".m2" / "sonatype.credentials"),
 
-    publishTo <<= version {
-      v: String =>
-        val nexus = "http://localhost:8081/"
-        if (v.trim.endsWith("SNAPSHOT")) {
-          Some("snapshots" at nexus + "nexus/content/repositories/snapshots")
-        }
-        else {
-          Some("releases" at nexus + "nexus/content/repositories/releases")
-        }
+    publishTo <<= version { (v: String) =>
+      val nexus = "https://oss.sonatype.org/"
+      if (v.trim.endsWith("SNAPSHOT"))
+        Some("snapshots" at nexus + "content/repositories/snapshots")
+      else
+        Some("releases"  at nexus + "service/local/staging/deploy/maven2")
     },
 
     publishMavenStyle := true,
@@ -45,7 +42,5 @@ object ApplicationBuild extends Build {
 
   ).settings(
     addArtifact(Artifact(appName, "dist", "zip", "dist"), dist ).settings : _*
-  ).settings(
-    aether.Aether.aetherPublishSettings : _*
   )
 }
